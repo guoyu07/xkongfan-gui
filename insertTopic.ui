@@ -29,18 +29,33 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>40</y>
-     <width>141</width>
-     <height>166</height>
+     <x>70</x>
+     <y>50</y>
+     <width>251</width>
+     <height>144</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLineEdit" name="lineEdit"/>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QRadioButton" name="rdSavedTopic">
+        <property name="text">
+         <string>选择常用话题：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="cbUsual">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
      <spacer name="verticalSpacer">
@@ -56,9 +71,6 @@
      </spacer>
     </item>
     <item>
-     <widget class="QComboBox" name="cbUsual"/>
-    </item>
-    <item>
      <spacer name="verticalSpacer_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -72,79 +84,18 @@
      </spacer>
     </item>
     <item>
-     <widget class="QComboBox" name="cbHot"/>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QCheckBox" name="checkBox">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>40</y>
-     <width>71</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>加入常用</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>40</y>
-     <width>133</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QRadioButton" name="rdNewTopic">
-      <property name="text">
-       <string>新增话题：</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <spacer name="verticalSpacer_4">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <widget class="QRadioButton" name="rdSavedTopic">
-      <property name="text">
-       <string>选择常用话题：</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <spacer name="verticalSpacer_3">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <widget class="QRadioButton" name="rdHotTopic">
-      <property name="text">
-       <string>选择热门话题：</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QRadioButton" name="rdHotTopic">
+        <property name="text">
+         <string>选择热门话题：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="cbHot"/>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

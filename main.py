@@ -19,6 +19,13 @@ class XkongFan(QtGui.QMainWindow):
         self.ui=Ui_Form()
         self.ui.setupUi(self)
 
+        desktop=QtGui.QApplication.desktop()
+        width=desktop.width()
+        height=desktop.height()
+        self.move((width-self.width())/2,(height-self.height())/2)
+
+
+
         self.uid=self.getUid()
         self.xkongfan=fanfou.Fanfou(self.uid)
         self.bind()
