@@ -7,35 +7,44 @@ import ConfigParser
 import time
 import os
 import codecs
+#used in packing to exe files.
+import sip
 
 from PySide import QtGui,QtCore
-from xkongfan_ui import Ui_Form
+from ui_MainWindow import XkongfanWindow
 from insertTopic import InsertTopicDialog
 from atFriend import AtFriendDialog
 
-class XkongFan(QtGui.QMainWindow):
+class XkongFan(XkongfanWindow):
+
     def __init__(self,parent=None):
         super(XkongFan,self).__init__(parent)
-        self.ui=Ui_Form()
-        self.ui.setupUi(self)
-
-        desktop=QtGui.QApplication.desktop()
-        width=desktop.width()
-        height=desktop.height()
-        self.move((width-self.width())/2,(height-self.height())/2)
-
-
 
         self.uid=self.getUid()
         self.xkongfan=fanfou.Fanfou(self.uid)
-        self.bind()
 
         self.img=""
         self.hotTopicList=[]
         self.CONFIGFILE="xkongfan.conf"
-        self.configFileSection=["trends"]
+        self.configFileSection=["trends","Manage"]
 
         self.initConfig()
+    def btnHandle(self,btnID):
+        if btnID==1001:
+            self.hide()
+        elif btnID==1002:
+            self.trayIcon.hide()
+            self.close()
+            sys.exit(0)
+        elif btnID==1003:
+            self.insertTopic()
+        elif btnID==1004:
+            self.getImg()
+        elif btnID==1005:
+            self.atFriend()
+        elif btnID==1006:
+            self.update()
+
     def initConfig(self):
         self.cf=ConfigParser.ConfigParser()
         if not os.path.isfile(self.CONFIGFILE):
@@ -46,17 +55,13 @@ class XkongFan(QtGui.QMainWindow):
             if not self.cf.has_section(section):
                 self.cf.add_section(section)
         self.cf.write(open(self.CONFIGFILE,"w"))
+        self.cf.set("Manage","PressReturnSentAndMinimize","true")
+        self.cf.write(open(self.CONFIGFILE,"w"))
 
 
-    def bind(self):
-        QtCore.QObject.connect(self.ui.btnGetImg,
-                                QtCore.SIGNAL("clicked()"),self.getImg)
-        QtCore.QObject.connect(self.ui.btnUpdate,
-                                QtCore.SIGNAL("clicked()"),self.update)
-        QtCore.QObject.connect(self.ui.btnAtFriend,
-                                QtCore.SIGNAL("clicked()"),self.atFriend)
-        QtCore.QObject.connect(self.ui.btnInsertTpk,
-                                QtCore.SIGNAL("clicked()"),self.insertTopic)
+    def KeyReturnEvent(self):
+        #PlainTextEdit的keyReturn事件
+        self.update()
     def alert(self,msg,title=u"提示"):
         QtGui.QMessageBox.warning(self,title,msg)
     def getUid(self):
@@ -69,9 +74,10 @@ class XkongFan(QtGui.QMainWindow):
         jsonData=json.read(resp)
         uid=jsonData['id']
         return uid
+
     #slot+++++++++++++++++++++++++++++++++++++++++
     def update(self):
-        msg=self.ui.plainTextEdit.toPlainText()
+        msg=self.plainTextEdit.toPlainText()
         if not msg and not self.img:
             self.alert(u"文字与图片必须输入至少一个！")
             return
@@ -82,24 +88,29 @@ class XkongFan(QtGui.QMainWindow):
         else:
             resp=self.xkongfan.Update(msg)
         if resp['rawid']:
-            self.alert(u"更新成功：【%s】"%resp['rawid'])
+            #silent mode ---------->
+            #self.alert(u"更新成功：【%s】"%resp['rawid'])
             self.img=""
-        self.ui.plainTextEdit.setPlainText("")
+            self.plainTextEdit.setPlainText("")
+            self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
+            switch=self.cf.get("Manage","PressReturnSentAndMinimize")
+            if switch=="true":
+                self.hide()
+        else:
+            #Logging.....log Error
+            self.alert(u"消息更新失败……")
+
     def getImg(self):
         fd=QtGui.QFileDialog(self)
         self.img=fd.getOpenFileName(None,u"选择图片","./",
                     ("Image files(*.jpg;*.bmp;*.jpeg;*.gif;*.png)"))[0]
-        if os.path.isfile(self.img):
-            self.ui.btnGetImg.setText(u"更换图片")
-        else:
-            self.ui.btnGetImg.setText(u"插入图片")
         return self.img
     def atFriend(self):
         myFriends=self.getFriendList()
         atFriendDialog=AtFriendDialog(myFriends,self)
         if atFriendDialog.exec_():
             friend=atFriendDialog.getRetValue()
-            self.ui.plainTextEdit.insertPlainText("@%s "%friend)
+            self.plainTextEdit.insertPlainText("@%s "%friend)
 
     def insertTopic(self):
         hotTopics=self.getHotTopic()
@@ -107,7 +118,7 @@ class XkongFan(QtGui.QMainWindow):
         insertDialog=InsertTopicDialog(savedTopics,hotTopics,self)
         if insertDialog.exec_():
             topic=insertDialog.getRetValue()
-            self.ui.plainTextEdit.insertPlainText("#%s#"%topic)
+            self.plainTextEdit.insertPlainText("#%s#"%topic)
     def getHotTopic(self):
         resp=self.xkongfan.Trends()
         if not resp:
@@ -138,7 +149,6 @@ class XkongFan(QtGui.QMainWindow):
             friendName=friend['name']
             friends.append(friendName)
         return friends
-
 
 if __name__=="__main__":
     app=QtGui.QApplication(sys.argv)

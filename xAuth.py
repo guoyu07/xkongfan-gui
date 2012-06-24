@@ -13,8 +13,8 @@ from login import LoginDialog
 
 from PySide import QtCore,QtGui
 
-consumer_key = '7e'   # api key
-consumer_secret = 'cc2'  # api secret
+consumer_key = '7ea011d'   # api key
+consumer_secret = 'cc2b2'  # api secret
 access_token_url = 'http://fanfou.com/oauth/access_token'
 verify_url = 'http://api.fanfou.com/account/verify_credentials.xml'
 aa="http://api.fanfou.com/account/rate_limit_status.json"
