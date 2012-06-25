@@ -14,8 +14,8 @@ from login import LoginDialog
 from PySide import QtCore,QtGui
 from zlogging import logging
 
-consumer_key = '7ea011d6ddbcec473e04af0fdd5b6db6'   # api key
-consumer_secret = 'cc2b21c8bf8f990a9739012fa40e00d3'  # api secret
+consumer_key = '7ea011d6ddbc'   # api key
+consumer_secret = 'cc2b21c8bf8'  # api secret
 access_token_url = 'http://fanfou.com/oauth/access_token'
 verify_url = 'http://api.fanfou.com/account/verify_credentials.xml'
 CONFIGFILE="fanfou.conf"
