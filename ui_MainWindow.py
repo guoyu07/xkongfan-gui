@@ -42,7 +42,7 @@ class RoundPlainTextEdit(QtGui.QPlainTextEdit):
 
     def paintEvent_(self,event):
         painter=QtGui.QPainter(self)
-        painter.drawPixmap(0,0,self.pix.width(),self.pix.height(),self.pix)
+        painter.drawPixmap(0,0,self.pix)
 
     def keyPressEvent(self,event):
         if event.key()==QtCore.Qt.Key_Return:
@@ -74,6 +74,7 @@ class XkongfanWindow(QtGui.QMainWindow):
         height=desktop.height()
         self.move((width-self.width())/2,(height-self.height())/2)
         self.setMouseTracking(True)
+
 
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
@@ -114,7 +115,7 @@ class XkongfanWindow(QtGui.QMainWindow):
                     btn.setPixmap(None)
                     break
     def trayClick(self,reason):
-        if reason==QtGui.QSystemTrayIcon.DoubleClick:
+        if reason==QtGui.QSystemTrayIcon.Trigger:
             self.showNormal()
     def trayMenu(self):
         mainIcon=QtGui.QIcon("resource/btnMini.png")

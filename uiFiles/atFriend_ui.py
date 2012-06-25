@@ -12,8 +12,8 @@ from PySide import QtCore, QtGui
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(351, 154)
-        Dialog.setMaximumSize(QtCore.QSize(351, 154))
+        Dialog.resize(360, 178)
+        Dialog.setMaximumSize(QtCore.QSize(360, 178))
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(140, 120, 171, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)

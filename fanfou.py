@@ -7,8 +7,6 @@
 #created:        2010-12-18 22:42
 #Modi @:2012-2-24 11:50:03 by xkong1937,xkong1937@gamil.com
 import sys
-sys.path.append("E:\\python")
-
 import re
 import json
 import urllib
@@ -19,7 +17,7 @@ from encode import multipart_encode
 from streaminghttp import register_openers
 import urllib2
 
-import xAuth
+
 DEBUG=True
 #DEBUG=False
 
@@ -31,10 +29,9 @@ if sys.getdefaultencoding() != default_encoding:
 sys.setdefaultencoding(default_encoding)
 
 
-
 class Api():
     api_base="api.fanfou.com"
-#extention="xml" #json, xml, rss
+    #extention="xml" #json, xml, rss
     extension='json'
 
     api={
@@ -103,13 +100,14 @@ class Api():
         else:
             return ""
 
-class Fanfou():
+class Fanfou(object):
 #config:
     source='xkongfan'
 
-    def __init__(self, id="", sn=""):
+    def __init__(self, id="", sn="",parent=None):
         self.id=id
         self.sn=sn
+        self.parent=parent
 
     def _callback(self, api_type, jsonData={}, POST=False):
         dynamic_api=False
@@ -120,7 +118,7 @@ class Fanfou():
         assert url, 'No API named %s!' % api_type
 
         try:
-            resp=xAuth.apiOpen(url,jsonData,POST)
+            resp=self.parent.xauth.apiOpen(url,jsonData,POST)
         except Exception,e:
             print "Error:_callback in Fanfou :"+str(e)
             resp=""
@@ -245,7 +243,7 @@ class Fanfou():
         data,headers=multipart_encode(jsonData)
         api='photos_upload'
         url=str(Api(api))
-        return self._getJson(xAuth.apiUploadPhoto(url,data,headers))
+        return self._getJson(self.parent.xauth.apiUploadPhoto(url,data,headers))
 #用户照片
     def PhotoUserTimeline(self, count=20, since_id="", max_id="", page=1, format=""):
         jsonData={

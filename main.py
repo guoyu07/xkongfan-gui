@@ -1,6 +1,6 @@
 #coding:utf-8
 import sys
-import xAuth
+from xAuth import BaseAuth
 import fanfou
 import json
 import ConfigParser
@@ -14,21 +14,30 @@ from PySide import QtGui,QtCore
 from ui_MainWindow import XkongfanWindow
 from insertTopic import InsertTopicDialog
 from atFriend import AtFriendDialog
+from login import LoginDialog
 
+from zlogging import logging
+
+class xkongAuth(BaseAuth):
+    def __init__(self,parent=None):
+        super(xkongAuth,self).__init__(parent)
+    def getAccount(self):
+        return self.parent.getAccount()
 class XkongFan(XkongfanWindow):
 
     def __init__(self,parent=None):
         super(XkongFan,self).__init__(parent)
-
+        self.xauth=xkongAuth(self)
+        self.xauth.getToken()
         self.uid=self.getUid()
-        self.xkongfan=fanfou.Fanfou(self.uid)
+        self.xkongfan=fanfou.Fanfou(self.uid,parent=self)
 
         self.img=""
-        self.hotTopicList=[]
         self.CONFIGFILE="xkongfan.conf"
         self.configFileSection=["trends","Manage"]
 
         self.initConfig()
+
     def btnHandle(self,btnID):
         if btnID==1001:
             self.hide()
@@ -46,6 +55,7 @@ class XkongFan(XkongfanWindow):
             self.update()
 
     def initConfig(self):
+        logging.info("Init Config.")
         self.cf=ConfigParser.ConfigParser()
         if not os.path.isfile(self.CONFIGFILE):
             f=open(self.CONFIGFILE,"w")
@@ -57,26 +67,38 @@ class XkongFan(XkongfanWindow):
         self.cf.write(open(self.CONFIGFILE,"w"))
         self.cf.set("Manage","PressReturnSentAndMinimize","true")
         self.cf.write(open(self.CONFIGFILE,"w"))
-
+        logging.info("ConfigFile ready.")
 
     def KeyReturnEvent(self):
         #PlainTextEdit的keyReturn事件
         self.update()
     def alert(self,msg,title=u"提示"):
         QtGui.QMessageBox.warning(self,title,msg)
-    def getUid(self):
+    def getUid_(self):
+        logging.info("Get user id.")
         verify_url = 'http://api.fanfou.com/account/verify_credentials.json'
         try:
-            resp=xAuth.apiOpen(verify_url)
+            resp=self.xAuth.apiOpen(verify_url)
         except Exception,e:
+            logging.error("GetUid raise Error:%s"%e)
             self.alert(u"在getUid函数处出错:%s"%e,u"错误")
             sys.exit(0)
         jsonData=json.read(resp)
         uid=jsonData['id']
+        logging.info("Userid Got.")
+        return uid
+    def getUid(self):
+        logging.info("Get user id.")
+        verify_url = 'http://api.fanfou.com/account/verify_credentials.json'
+        resp=self.xauth.apiOpen(verify_url)
+        jsonData=json.read(resp)
+        uid=jsonData['id']
+        logging.info("Userid Got.")
         return uid
 
     #slot+++++++++++++++++++++++++++++++++++++++++
     def update(self):
+        logging.info("Update status...")
         msg=self.plainTextEdit.toPlainText()
         if not msg and not self.img:
             self.alert(u"文字与图片必须输入至少一个！")
@@ -96,36 +118,44 @@ class XkongFan(XkongfanWindow):
             switch=self.cf.get("Manage","PressReturnSentAndMinimize")
             if switch=="true":
                 self.hide()
+            logging.info("Staus Updated.")
         else:
             #Logging.....log Error
+            logging.error("Error when update status:MSG:%s"%msg)
             self.alert(u"消息更新失败……")
 
     def getImg(self):
         fd=QtGui.QFileDialog(self)
+        fd.move(self.x(),self.y())
         self.img=fd.getOpenFileName(None,u"选择图片","./",
                     ("Image files(*.jpg;*.bmp;*.jpeg;*.gif;*.png)"))[0]
         return self.img
     def atFriend(self):
         myFriends=self.getFriendList()
         atFriendDialog=AtFriendDialog(myFriends,self)
+        atFriendDialog.move(self.x(),self.y()+178)
         if atFriendDialog.exec_():
             friend=atFriendDialog.getRetValue()
             self.plainTextEdit.insertPlainText("@%s "%friend)
 
     def insertTopic(self):
+        hotTopics=[]
         hotTopics=self.getHotTopic()
         savedTopics=self.getSavedTopic()
         insertDialog=InsertTopicDialog(savedTopics,hotTopics,self)
+        insertDialog.move(self.x(),self.y()+178)
         if insertDialog.exec_():
             topic=insertDialog.getRetValue()
             self.plainTextEdit.insertPlainText("#%s#"%topic)
     def getHotTopic(self):
+        hotTopic=[]
         resp=self.xkongfan.Trends()
         if not resp:
-            return 1
+            return []
         for trends in resp['trends']:
-            self.hotTopicList.append(trends['name'])
-        return self.hotTopicList
+            if trends not in hotTopic:
+                hotTopic.append(trends['name'])
+        return hotTopic
     def saveTopic(self,topicList):
         self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
         savedTopics=self.getSavedTopic()
@@ -149,6 +179,14 @@ class XkongFan(XkongfanWindow):
             friendName=friend['name']
             friends.append(friendName)
         return friends
+    def getAccount(self):
+        loginDialog=LoginDialog(self)
+        if loginDialog.exec_():
+            user,pwd=loginDialog.getRetValue()
+            return user,pwd
+        else:
+            logging.info("Exit....")
+            sys.exit(0)
 
 if __name__=="__main__":
     app=QtGui.QApplication(sys.argv)

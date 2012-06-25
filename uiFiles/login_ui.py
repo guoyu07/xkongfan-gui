@@ -14,7 +14,6 @@ class Ui_Dialog(object):
         Dialog.setObjectName("Dialog")
         Dialog.resize(360, 178)
         Dialog.setMaximumSize(QtCore.QSize(360, 178))
-        #Dialog.setWindowIcon(QtGui.QIcon("resource/icon.png"))
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(130, 130, 171, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
