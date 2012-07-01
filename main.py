@@ -7,14 +7,17 @@ import ConfigParser
 import time
 import os
 import codecs
+import Image
 #used in packing to exe files.
 import sip
 
 from PySide import QtGui,QtCore
 from ui_MainWindow import XkongfanWindow
+
 from insertTopic import InsertTopicDialog
 from atFriend import AtFriendDialog
 from login import LoginDialog
+from showImg import ShowImgDialog
 
 from zlogging import logging
 
@@ -33,6 +36,7 @@ class XkongFan(XkongfanWindow):
         self.xkongfan=fanfou.Fanfou(self.uid,parent=self)
 
         self.img=""
+        self.convertedImg=""
         self.CONFIGFILE="xkongfan.conf"
         self.configFileSection=["trends","Manage"]
 
@@ -72,21 +76,19 @@ class XkongFan(XkongfanWindow):
     def KeyReturnEvent(self):
         #PlainTextEdit的keyReturn事件
         self.update()
+    def imgLabelLeftClicked(self):
+        #ImgLabel的左键单击事件
+        if self.img:
+            self.showImg(self.img)
+    def imgLabelRightClicked(self):
+        #ImgLabel的右键单击事件
+        if self.img:
+            self.img=""
+            self.imgLabel.setText(u"")
+            if os.path.isfile(self.convertedImg):
+                os.remove(self.convertedImg)
     def alert(self,msg,title=u"提示"):
         QtGui.QMessageBox.warning(self,title,msg)
-    def getUid_(self):
-        logging.info("Get user id.")
-        verify_url = 'http://api.fanfou.com/account/verify_credentials.json'
-        try:
-            resp=self.xAuth.apiOpen(verify_url)
-        except Exception,e:
-            logging.error("GetUid raise Error:%s"%e)
-            self.alert(u"在getUid函数处出错:%s"%e,u"错误")
-            sys.exit(0)
-        jsonData=json.read(resp)
-        uid=jsonData['id']
-        logging.info("Userid Got.")
-        return uid
     def getUid(self):
         logging.info("Get user id.")
         verify_url = 'http://api.fanfou.com/account/verify_credentials.json'
@@ -95,6 +97,18 @@ class XkongFan(XkongfanWindow):
         uid=jsonData['id']
         logging.info("Userid Got.")
         return uid
+    def showImg(self,imgsource,flag=True):
+        imgName=imgsource.split("/")[-1]
+        if not os.path.isfile(self.convertedImg):
+            img=Image.open(imgsource)
+            self.convertedImg="%s.png"%imgName
+            img.save(self.convertedImg,"png")
+        if flag:
+            showImgDlg=ShowImgDialog(self.convertedImg,self)
+            showImgDlg.move(self.x(),self.y()+178)
+            if showImgDlg.exec_():
+                os.remove(self.convertedImg)
+
 
     #slot+++++++++++++++++++++++++++++++++++++++++
     def update(self):
@@ -114,6 +128,10 @@ class XkongFan(XkongfanWindow):
             #self.alert(u"更新成功：【%s】"%resp['rawid'])
             self.img=""
             self.plainTextEdit.setPlainText("")
+            self.imgLabel.setText(u"")
+            if os.path.isfile(self.convertedImg):
+                os.remove(self.convertedImg)
+            self.convertedImg=""
             self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
             switch=self.cf.get("Manage","PressReturnSentAndMinimize")
             if switch=="true":
@@ -129,6 +147,8 @@ class XkongFan(XkongfanWindow):
         fd.move(self.x(),self.y())
         self.img=fd.getOpenFileName(None,u"选择图片","./",
                     ("Image files(*.jpg;*.bmp;*.jpeg;*.gif;*.png)"))[0]
+        if os.path.isfile(self.img):
+            self.imgLabel.setText(self.img.split("/")[-1])
         return self.img
     def atFriend(self):
         myFriends=self.getFriendList()

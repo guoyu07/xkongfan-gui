@@ -49,7 +49,16 @@ class RoundPlainTextEdit(QtGui.QPlainTextEdit):
             self.parent.KeyReturnEvent()
         else:
             QtGui.QPlainTextEdit.keyPressEvent(self,event)
-
+class ImgLabel(QtGui.QLabel):
+    def __init__(self,parent=None):
+        super(ImgLabel,self).__init__(parent)
+        self.parent=parent
+    def mousePressEvent(self,event):
+        if event.buttons()==QtCore.Qt.LeftButton:
+            self.parent.imgLabelLeftClicked()
+            event.accept()
+        elif event.buttons()==QtCore.Qt.RightButton:
+            self.parent.imgLabelRightClicked()
 class XkongfanWindow(QtGui.QMainWindow):
     def __init__(self,parent=None):
         super(XkongfanWindow,self).__init__(parent)
@@ -95,6 +104,10 @@ class XkongfanWindow(QtGui.QMainWindow):
             btn.setPixmap(QtGui.QPixmap(buttonDesc['btnImgSource']))
             btn.setObjectName(buttonDesc['btnName'])
             self.imgButtonList.append(btn)
+        self.imgLabel=ImgLabel(self)
+        self.imgLabel.setGeometry(150,157,130,18)
+        self.imgLabel.setToolTip(u"左单击查看图片，右单击清除图片")
+
 
     def btnHandle(self,btnID):
         if btnID==1001:
@@ -146,6 +159,11 @@ class XkongfanWindow(QtGui.QMainWindow):
         painter.drawPixmap(0,0,QtGui.QPixmap("resource/main.png"))
     def KeyReturnEvent(self):
         raise NotImplementedError
+    def imgLabelLeftClicked(self):
+        raise NotImplementedError
+    def imgLabelRightClicked(self):
+        raise NotImplementedError
+
 
 if __name__=="__main__":
     import sys
