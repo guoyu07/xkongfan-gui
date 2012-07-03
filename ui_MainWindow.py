@@ -63,8 +63,11 @@ class XkongfanWindow(QtGui.QMainWindow):
     def __init__(self,parent=None):
         super(XkongfanWindow,self).__init__(parent)
         self.setWindowTitle(u"爱尚饭")
-        self.setFixedSize(360,178)
         self.setWindowIcon(QtGui.QIcon("resource/icon.png"))
+        self.dskWidth=QtGui.QApplication.desktop().width()
+        self.dskHeight=QtGui.QApplication.desktop().height()
+        self.initUI()
+
 
         self.mask=QtGui.QBitmap(360,178)
         self.mask.fill(QtCore.Qt.white)
@@ -78,10 +81,6 @@ class XkongfanWindow(QtGui.QMainWindow):
         self.plainTextEdit.setPlainText("")
         self.plainTextEdit.setObjectName("plainTextEdit")
 
-        desktop=QtGui.QApplication.desktop()
-        width=desktop.width()
-        height=desktop.height()
-        self.move((width-self.width())/2,(height-self.height())/2)
         self.setMouseTracking(True)
 
 
@@ -107,7 +106,6 @@ class XkongfanWindow(QtGui.QMainWindow):
         self.imgLabel=ImgLabel(self)
         self.imgLabel.setGeometry(150,157,130,18)
         self.imgLabel.setToolTip(u"左单击查看图片，右单击清除图片")
-
 
     def btnHandle(self,btnID):
         if btnID==1001:
@@ -164,7 +162,32 @@ class XkongfanWindow(QtGui.QMainWindow):
     def imgLabelRightClicked(self):
         raise NotImplementedError
 
-
+    def hide(self):
+        self.aniHide=QtCore.QPropertyAnimation(self,"geometry")
+        self.aniHide.setDuration(200)
+        self.aniHide.setStartValue(QtCore.QRect((self.dskWidth-360)/2,
+                                                (self.dskHeight-178)/2,
+                                                360,
+                                                178))
+        self.aniHide.setEndValue(QtCore.QRect(self.dskWidth/2,
+                                                self.dskHeight/2,
+                                                0,
+                                                0))
+        self.aniHide.start()
+    def initUI(self):
+        self.animation=QtCore.QPropertyAnimation(self,"geometry")
+        self.animation.setDuration(200)
+        self.animation.setStartValue(QtCore.QRect(self.dskWidth/2,
+                                                self.dskHeight/2,
+                                                0,
+                                                0))
+        self.animation.setEndValue(QtCore.QRect((self.dskWidth-360)/2,
+                                                (self.dskHeight-178)/2,
+                                                360,
+                                                178))
+        self.animation.start()
+    def showNormal(self):
+        self.initUI()
 if __name__=="__main__":
     import sys
     app=QtGui.QApplication(sys.argv)

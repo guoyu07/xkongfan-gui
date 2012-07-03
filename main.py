@@ -30,6 +30,7 @@ class XkongFan(XkongfanWindow):
 
     def __init__(self,parent=None):
         super(XkongFan,self).__init__(parent)
+
         self.xauth=xkongAuth(self)
         self.xauth.getToken()
         self.uid=self.getUid()
@@ -41,7 +42,6 @@ class XkongFan(XkongfanWindow):
         self.configFileSection=["trends","Manage"]
 
         self.initConfig()
-
     def btnHandle(self,btnID):
         if btnID==1001:
             self.hide()
@@ -99,13 +99,12 @@ class XkongFan(XkongfanWindow):
         return uid
     def showImg(self,imgsource,flag=True):
         imgName=imgsource.split("/")[-1]
+        self.convertedImg="%s.png"%imgName
         if not os.path.isfile(self.convertedImg):
             img=Image.open(imgsource)
-            self.convertedImg="%s.png"%imgName
             img.save(self.convertedImg,"png")
         if flag:
             showImgDlg=ShowImgDialog(self.convertedImg,self)
-            showImgDlg.move(self.x(),self.y()+178)
             if showImgDlg.exec_():
                 os.remove(self.convertedImg)
 

@@ -9,6 +9,7 @@ class InsertTopicDialog(QtGui.QDialog):
         self.parent=parent
         self.ui=Ui_Dialog()
         self.ui.setupUi(self)
+        self.zoomRaw()
 
         self.ui.cbHot.addItems(hotTopic)
         self.ui.cbUsual.addItems(savedTopic)
@@ -39,5 +40,16 @@ class InsertTopicDialog(QtGui.QDialog):
         return self.retValue
     def cbHotActivated(self):
         self.ui.rdHotTopic.setChecked(True)
+    def zoomRaw(self):
+        self.aniZoomRaw=QtCore.QPropertyAnimation(self,"geometry")
+        self.aniZoomRaw.setDuration(200)
+        self.aniZoomRaw.setStartValue(QtCore.QRect(self.parent.x()+5,
+                                                    self.parent.y()+178+24,
+                                                     0, 0))
+        self.aniZoomRaw.setEndValue(QtCore.QRect(self.parent.x()+5,
+                                                    self.parent.y()+178+24,
+                                                     351, 154))
+        self.aniZoomRaw.start()
+        self.zoomFlag=True
 
 

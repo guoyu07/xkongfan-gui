@@ -41,8 +41,8 @@ buttonMap={
     1006:{
         'btnId':1006,
         'btnName':'btnUpdate',
-        'btnGeometry':(310,157,18,18),
-        'btnToolTip':u"更新",
+        'btnGeometry':(310,157,41,18),
+        'btnToolTip':u"按Enter直接发布状态",
         'onMouseShow':False,
         'btnImgSource':"%s/btnUpdate.png"%ResourceDir},
     }

@@ -6,9 +6,11 @@ from atfriend_ui import Ui_Dialog
 class AtFriendDialog(QtGui.QDialog):
     def __init__(self,friendlist,parent=None):
         super(AtFriendDialog,self).__init__(parent)
+        self.parent=parent
         self.friendList=friendlist
         self.ui=Ui_Dialog()
         self.ui.setupUi(self)
+        self.zoomRaw()
 
         self.ui.rdFriends.setChecked(True)
 
@@ -31,4 +33,15 @@ class AtFriendDialog(QtGui.QDialog):
         QtGui.QDialog.reject(self)
     def getRetValue(self):
         return self.retValue
+    def zoomRaw(self):
+        self.aniZoomRaw=QtCore.QPropertyAnimation(self,"geometry")
+        self.aniZoomRaw.setDuration(200)
+        self.aniZoomRaw.setStartValue(QtCore.QRect(self.parent.x()+5,
+                                                    self.parent.y()+178+24,
+                                                     0, 0))
+        self.aniZoomRaw.setEndValue(QtCore.QRect(self.parent.x()+5,
+                                                    self.parent.y()+178+24,
+                                                     351, 154))
+        self.aniZoomRaw.start()
+        self.zoomFlag=True
 

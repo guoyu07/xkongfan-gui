@@ -13,9 +13,8 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(351, 154)
-        Dialog.setMaximumSize(QtCore.QSize(351, 154))
         self.label = QtGui.QLabel(Dialog)
-        self.label.setGeometry(QtCore.QRect(40, 20, 271, 101))
+        self.label.setGeometry(QtCore.QRect(10, 10, 331, 134))
         self.label.setText("")
         self.label.setObjectName("label")
 
@@ -24,4 +23,5 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "查看图片", None, QtGui.QApplication.UnicodeUTF8))
+
 
