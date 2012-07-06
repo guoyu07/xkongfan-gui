@@ -15,14 +15,14 @@ class InsertTopicDialog(QtGui.QDialog):
         self.ui.cbUsual.addItems(savedTopic)
 
         self.connect(self.ui.buttonBox,
-            QtCore.SIGNAL("accepted()"),self.accept())
+            QtCore.SIGNAL("accepted()"),self.accept)
         self.connect(self.ui.buttonBox,
-            QtCore.SIGNAL("rejected()"),self.reject())
+            QtCore.SIGNAL("rejected()"),self.reject)
         self.connect(self.ui.cbHot,
-            QtCore.SIGNAL("activated()"),self.cbHotActivated())
+            QtCore.SIGNAL("OnClick()"),self.cbHotActivated)
+        self.ui.cbUsual.OnClick.connect(self.cbUsualClicked)
         self.ui.rdSavedTopic.setChecked(True)
         self.retValue=""
-
     def accept(self):
         if self.ui.rdHotTopic.isChecked():
             self.retValue=self.ui.cbHot.currentText()
@@ -40,6 +40,10 @@ class InsertTopicDialog(QtGui.QDialog):
         return self.retValue
     def cbHotActivated(self):
         self.ui.rdHotTopic.setChecked(True)
+        self.ui.rdSavedTopic.setChecked(False)
+    def cbUsualClicked(self):
+        self.ui.rdHotTopic.setChecked(False)
+        self.ui.rdSavedTopic.setChecked(True)
     def zoomRaw(self):
         self.aniZoomRaw=QtCore.QPropertyAnimation(self,"geometry")
         self.aniZoomRaw.setDuration(200)

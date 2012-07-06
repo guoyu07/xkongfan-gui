@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PySide import QtCore, QtGui
-
+from xkongWidget import xComboBox
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -41,7 +41,7 @@ class Ui_Dialog(object):
         self.rdFriends = QtGui.QRadioButton(self.widget)
         self.rdFriends.setObjectName("rdFriends")
         self.horizontalLayout_2.addWidget(self.rdFriends)
-        self.comboBox = QtGui.QComboBox(self.widget)
+        self.comboBox = xComboBox(self.widget)
         self.comboBox.setObjectName("comboBox")
         self.horizontalLayout_2.addWidget(self.comboBox)
         self.verticalLayout.addLayout(self.horizontalLayout_2)

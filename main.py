@@ -7,17 +7,19 @@ import ConfigParser
 import time
 import os
 import codecs
+import urllib
 import Image
-#used in packing to exe files.
+#used in packing to exe files via py2exe
 import sip
 
-from PySide import QtGui,QtCore
-from ui_MainWindow import XkongfanWindow
+from PySide import QtGui,QtCore,QtNetwork
 
+from ui_MainWindow import XkongfanWindow
 from insertTopic import InsertTopicDialog
 from atFriend import AtFriendDialog
 from login import LoginDialog
 from showImg import ShowImgDialog
+from showStatus import ShowStatusDialog
 
 from zlogging import logging
 
@@ -30,18 +32,108 @@ class XkongFan(XkongfanWindow):
 
     def __init__(self,parent=None):
         super(XkongFan,self).__init__(parent)
+        self.img=""
+        self.convertedImg=""
+        self.userHeadPath="./data/user_head"
+        self.unreadStatus=[]
+        self.hasUnreadStatus=False
+        self.CONFIGFILE="xkongfan.conf"
+        self.configFileSection=["trends","Manage"]
+        self.initConfig()
 
+        sigTimer=QtCore.QTimer(self)
+        sigTimer.singleShot(1000,self.getInit)
+
+    def getInit(self):
         self.xauth=xkongAuth(self)
         self.xauth.getToken()
         self.uid=self.getUid()
         self.xkongfan=fanfou.Fanfou(self.uid,parent=self)
 
-        self.img=""
-        self.convertedImg=""
-        self.CONFIGFILE="xkongfan.conf"
-        self.configFileSection=["trends","Manage"]
+        self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
+        whichToCareFor=self.cf.get("Manage","care_for")
+        if whichToCareFor=="mentions":
+            self.getFriendHead()
+            self.initMentionID()
+            self.startListen()
+    def getFriendHead(self):
+        if not os.path.isdir(self.userHeadPath):
+            os.makedirs(self.userHeadPath)
+        resp=self.xkongfan.StatusFriends()
+        for friend in resp:
+            friendAvatarUrl=friend['profile_image_url_large']
+            friendAvatarName="%s/%s.jpg"%(self.userHeadPath,friend['id'])
+            userHeadPNG="%s/%s.png"%(self.userHeadPath,friend['id'])
+            if not os.path.isfile(friendAvatarName):
+                urllib.urlretrieve(friendAvatarUrl,friendAvatarName)
+                if os.path.isfile(friendAvatarName):
+                    img=Image.open(friendAvatarName)
+                    img.save(userHeadPNG,"png")
+    def startListen(self):
+        self.timer=QtCore.QTimer(self)
+        self.timer.setInterval(30*1000)
+        self.timer.timeout.connect(self.getLastMentionsId)
+        self.timer.start()
+    def getLastMentionsId(self):
+        resp=self.xkongfan.Mentions(count=20,since_id=self.lastMentionsId)
+        f=open("resp.txt","w")
+        f.write(repr(resp))
+        f.close()
+        for status in resp:
+            if status not in self.unreadStatus:
+                self.unreadStatus.append(status)
+        self.checkUnreadStatus()
+    def checkUnreadStatus(self):
+        if self.unreadStatus:
+            self.hasUnreadStatus=True
+            self.blittingStatus=self.unreadStatus.pop()
+            self.showNewMsgArrived(self.blittingStatus)
+        else:
+            self.hasUnreadStatus=False
 
-        self.initConfig()
+    def showNewMsgArrived(self,status):
+        user=status['user']
+        userHeadImage="%s/%s.png"%(self.userHeadPath,user['id'])
+        if not os.path.isfile(userHeadImage):
+            tmpFilename="%s/%s.jpg"%(self.userHeadPath,user['id'])
+            urllib.urlretrieve(user['profile_image_url_large'],tmpFilename)
+            img=Image.open(tmpFilename)
+            img.save(userHeadImage,"png")
+        self.sysIconBlitImg=userHeadImage
+        self.sysIconBlitFlag=0
+        self.blitTimer=QtCore.QTimer(self)
+        self.blitTimer.setInterval(300)
+        self.blitTimer.timeout.connect(self.blitSysIcon)
+        self.blitTimer.start()
+    def trayClick(self,reason):
+        if reason==QtGui.QSystemTrayIcon.DoubleClick:
+            if self.hasUnreadStatus:
+                self.showStatus(self.blittingStatus)
+                self.checkUnreadStatus()
+            else:
+                self.showNormal()
+    def showStatus(self,status):
+        self.lastMentionsId=status['id']
+        self.blitTimer.stop()
+        self.trayIcon.setIcon(QtGui.QIcon("resource/icon.png"))
+        showStatusDialog=ShowStatusDialog(status,self)
+        if showStatusDialog.exec_():
+            reStatus=showStatusDialog.getRetValue()
+            if reStatus:
+                resp=self.xkongfan.Update(reStatus,in_reply_to_status_id=status['id'])
+                if resp['id']:
+                    logging.info("ReplySent:to [%s],id [%s]"%(status['id'],resp['id']))
+    def blitSysIcon(self):
+        self.sysIconBlitFlag+=1
+        if self.sysIconBlitFlag%2==0:
+            self.trayIcon.setIcon(QtGui.QIcon(self.sysIconBlitImg))
+        else:
+            self.trayIcon.setIcon(QtGui.QIcon("%s/None.png"%self.userHeadPath))
+    def initMentionID(self):
+        resp=self.xkongfan.Mentions(count=1)
+        status=resp[0]
+        self.lastMentionsId=status['id']
+
     def btnHandle(self,btnID):
         if btnID==1001:
             self.hide()
@@ -69,7 +161,9 @@ class XkongFan(XkongfanWindow):
             if not self.cf.has_section(section):
                 self.cf.add_section(section)
         self.cf.write(open(self.CONFIGFILE,"w"))
-        self.cf.set("Manage","PressReturnSentAndMinimize","true")
+        self.cf.set("Manage","auto_minimize","true")
+        self.cf.set("Manage","Care_for","mentions")
+        self.cf.set("Manage","Last_Mention_id","000000")
         self.cf.write(open(self.CONFIGFILE,"w"))
         logging.info("ConfigFile ready.")
 
@@ -132,7 +226,7 @@ class XkongFan(XkongfanWindow):
                 os.remove(self.convertedImg)
             self.convertedImg=""
             self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
-            switch=self.cf.get("Manage","PressReturnSentAndMinimize")
+            switch=self.cf.get("Manage","auto_minimize")
             if switch=="true":
                 self.hide()
             logging.info("Staus Updated.")
@@ -206,10 +300,25 @@ class XkongFan(XkongfanWindow):
         else:
             logging.info("Exit....")
             sys.exit(0)
+def main():
+    app=QtGui.QApplication(sys.argv)
+    serverName="XkongfanSingleProcessServer"
+    socket=QtNetwork.QLocalSocket()
+    socket.connectToServer(serverName)
+    if socket.waitForConnected(500):
+        msg=u"只允许同时运行一个实例。程序已经打开？"
+        QtGui.QMessageBox.warning(None,u"提示",msg)
+        return (app.quit())
+    localServer=QtNetwork.QLocalServer()
+    localServer.listen(serverName)
+
+    try:
+        x=XkongFan()
+        x.show()
+        app.exec_()
+    finally:
+        localServer.close()
 
 if __name__=="__main__":
-    app=QtGui.QApplication(sys.argv)
-    x=XkongFan()
-    x.show()
-    sys.exit(app.exec_())
+    main()
 

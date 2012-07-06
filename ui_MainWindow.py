@@ -126,7 +126,7 @@ class XkongfanWindow(QtGui.QMainWindow):
                     btn.setPixmap(None)
                     break
     def trayClick(self,reason):
-        if reason==QtGui.QSystemTrayIcon.Trigger:
+        if reason==QtGui.QSystemTrayIcon.DoubleClick:
             self.showNormal()
     def trayMenu(self):
         mainIcon=QtGui.QIcon("resource/btnMini.png")

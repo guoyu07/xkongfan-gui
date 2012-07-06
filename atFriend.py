@@ -19,9 +19,14 @@ class AtFriendDialog(QtGui.QDialog):
         self.retValue=""
 
         self.connect(self.ui.buttonBox,QtCore.SIGNAL("accepted()"),
-            self.accept())
+            self.accept)
         self.connect(self.ui.buttonBox,QtCore.SIGNAL("rejected()"),
-            self.reject())
+            self.reject)
+        self.ui.comboBox.OnClick.connect(self.cmbClicked)
+    def cmbClicked(self):
+        self.ui.rdFriends.setChecked(True)
+        self.ui.rdNoneFriends.setChecked(False)
+
     def accept(self):
         if self.ui.rdFriends.isChecked():
             self.retValue=self.ui.comboBox.currentText()

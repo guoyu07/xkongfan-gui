@@ -42,6 +42,7 @@ class Api():
         "replies": "statuses/replies",
         "mentions":"statuses/mentions",
         "show": "statuses/show",
+        "statuses_friends":"statuses/friends",
         "test": "help/test",
         "user_timeline": "statuses/user_timeline",
         "update": "statuses/update",
@@ -138,6 +139,16 @@ class Fanfou(object):
         }
         api='public_timeline'
         return self._callback(api, jsonData)
+#显示用户好友
+    def StatusFriends(self,count=20,page=1,mode="lite"):
+        jsonData={
+            'id':self.id,
+            'count':count,
+            'page':page,
+            'mode':mode,
+            }
+        api='statuses_friends'
+        return self._callback(api,jsonData)
 #显示用户和好友的消息
     def FriendsTimeline(self, count=20, since_id="", max_id="", page=1, format=""):
         jsonData={
@@ -207,7 +218,7 @@ class Fanfou(object):
             'format':format, #might be html
         }
         api="mentions"
-        return self._callback(api, jsonData, POST=True)
+        return self._callback(api, jsonData)
 #发布消息
     def Update(self, status, in_reply_to_status_id="", source="", location=""):
         jsonData={

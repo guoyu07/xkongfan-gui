@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PySide import QtCore, QtGui
-
+from xkongWidget import xComboBox
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -30,7 +30,7 @@ class Ui_Dialog(object):
         self.rdSavedTopic = QtGui.QRadioButton(self.widget)
         self.rdSavedTopic.setObjectName("rdSavedTopic")
         self.horizontalLayout_2.addWidget(self.rdSavedTopic)
-        self.cbUsual = QtGui.QComboBox(self.widget)
+        self.cbUsual = xComboBox(self.widget)
         self.cbUsual.setEditable(True)
         self.cbUsual.setObjectName("cbUsual")
         self.horizontalLayout_2.addWidget(self.cbUsual)
@@ -42,7 +42,7 @@ class Ui_Dialog(object):
         self.rdHotTopic = QtGui.QRadioButton(self.widget)
         self.rdHotTopic.setObjectName("rdHotTopic")
         self.horizontalLayout.addWidget(self.rdHotTopic)
-        self.cbHot = QtGui.QComboBox(self.widget)
+        self.cbHot = xComboBox(self.widget)
         self.cbHot.setObjectName("cbHot")
         self.horizontalLayout.addWidget(self.cbHot)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -56,4 +56,5 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "插入话题", None, QtGui.QApplication.UnicodeUTF8))
         self.rdSavedTopic.setText(QtGui.QApplication.translate("Dialog", "选择常用话题：", None, QtGui.QApplication.UnicodeUTF8))
         self.rdHotTopic.setText(QtGui.QApplication.translate("Dialog", "选择热门话题：", None, QtGui.QApplication.UnicodeUTF8))
+
 
