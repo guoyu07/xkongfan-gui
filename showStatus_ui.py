@@ -8,11 +8,11 @@
 # WARNING! All changes made in this file will be lost!
 
 from PySide import QtCore, QtGui
-
+from xkongWidget import xPlainTextEdit
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(394, 300)
+        Dialog.resize(394, 280)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -28,7 +28,8 @@ class Ui_Dialog(object):
         self.textEdit.setFrameShape(QtGui.QFrame.NoFrame)
         self.textEdit.setFrameShadow(QtGui.QFrame.Raised)
         self.textEdit.setObjectName("textEdit")
-        self.plainTextEdit = QtGui.QPlainTextEdit(Dialog)
+        self.textEdit.setReadOnly(True)
+        self.plainTextEdit = xPlainTextEdit(Dialog)
         self.plainTextEdit.setGeometry(QtCore.QRect(20, 130, 351, 91))
         self.plainTextEdit.setObjectName("plainTextEdit")
 

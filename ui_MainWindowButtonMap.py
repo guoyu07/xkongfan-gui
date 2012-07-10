@@ -45,4 +45,12 @@ buttonMap={
         'btnToolTip':u"按Enter直接发布状态",
         'onMouseShow':False,
         'btnImgSource':"%s/btnUpdate.png"%ResourceDir},
+    1007:{
+        'btnId':1007,
+        'btnName':'btnShowSelectedImage',
+        'btnGeometry':(150,157,130,18),
+        'btnToolTip':u"左单击查看图片，右单击清除图片",
+        'onMouseShow':False,
+        'btnImgSource':"%s/btnNone.png"%ResourceDir},
+
     }

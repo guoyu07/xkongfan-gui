@@ -37,7 +37,7 @@ class Api():
     api={
         'public_timeline':'statuses/public_timeline',
         'friends_timeline':'statuses/friends_timeline',
-        'home_timeline':'statues/home_timeline',
+        'home_timeline':'statuses/home_timeline',
         'exists':'friendships/exists',
         "replies": "statuses/replies",
         "mentions":"statuses/mentions",

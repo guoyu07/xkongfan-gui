@@ -24,22 +24,25 @@ from showStatus import ShowStatusDialog
 from zlogging import logging
 
 class xkongAuth(BaseAuth):
+    '''xauth to fanfou server,do request.'''
     def __init__(self,parent=None):
         super(xkongAuth,self).__init__(parent)
     def getAccount(self):
         return self.parent.getAccount()
 class XkongFan(XkongfanWindow):
-
+    '''Main Class of Xkongfan.'''
     def __init__(self,parent=None):
         super(XkongFan,self).__init__(parent)
         self.img=""
         self.convertedImg=""
         self.userHeadPath="./data/user_head"
+        self.listenType=""
         self.unreadStatus=[]
         self.hasUnreadStatus=False
         self.CONFIGFILE="xkongfan.conf"
         self.configFileSection=["trends","Manage"]
         self.initConfig()
+        self.initBinding()
 
         sigTimer=QtCore.QTimer(self)
         sigTimer.singleShot(1000,self.getInit)
@@ -50,12 +53,17 @@ class XkongFan(XkongfanWindow):
         self.uid=self.getUid()
         self.xkongfan=fanfou.Fanfou(self.uid,parent=self)
 
+        self.getFriendHead()
         self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
         whichToCareFor=self.cf.get("Manage","care_for")
+
         if whichToCareFor=="mentions":
-            self.getFriendHead()
-            self.initMentionID()
-            self.startListen()
+            self.getLastStatusID(tipe="mentions")
+            self.listenType="mentions"
+        elif whichToCareFor=="home_timeline":
+            self.getLastStatusID(tipe="home_timeline")
+            self.listenType="home_timeline"
+        self.startListen()
     def getFriendHead(self):
         if not os.path.isdir(self.userHeadPath):
             os.makedirs(self.userHeadPath)
@@ -71,14 +79,14 @@ class XkongFan(XkongfanWindow):
                     img.save(userHeadPNG,"png")
     def startListen(self):
         self.timer=QtCore.QTimer(self)
-        self.timer.setInterval(30*1000)
+        self.timer.setInterval(60*1000)
         self.timer.timeout.connect(self.getLastMentionsId)
         self.timer.start()
     def getLastMentionsId(self):
-        resp=self.xkongfan.Mentions(count=20,since_id=self.lastMentionsId)
-        f=open("resp.txt","w")
-        f.write(repr(resp))
-        f.close()
+        if self.listenType=="mentions":
+            resp=self.xkongfan.Mentions(count=20,since_id=self.lastMentionsId)
+        elif self.listenType=="home_timeline":
+            resp=self.xkongfan.HomeTimeline(count=20,since_id=self.lastMentionsId)
         for status in resp:
             if status not in self.unreadStatus:
                 self.unreadStatus.append(status)
@@ -96,7 +104,7 @@ class XkongFan(XkongfanWindow):
         userHeadImage="%s/%s.png"%(self.userHeadPath,user['id'])
         if not os.path.isfile(userHeadImage):
             tmpFilename="%s/%s.jpg"%(self.userHeadPath,user['id'])
-            urllib.urlretrieve(user['profile_image_url_large'],tmpFilename)
+            urllib.urlretrieve(user['profile_image_url'],tmpFilename)
             img=Image.open(tmpFilename)
             img.save(userHeadImage,"png")
         self.sysIconBlitImg=userHeadImage
@@ -106,7 +114,7 @@ class XkongFan(XkongfanWindow):
         self.blitTimer.timeout.connect(self.blitSysIcon)
         self.blitTimer.start()
     def trayClick(self,reason):
-        if reason==QtGui.QSystemTrayIcon.DoubleClick:
+        if reason==QtGui.QSystemTrayIcon.Trigger:
             if self.hasUnreadStatus:
                 self.showStatus(self.blittingStatus)
                 self.checkUnreadStatus()
@@ -116,39 +124,38 @@ class XkongFan(XkongfanWindow):
         self.lastMentionsId=status['id']
         self.blitTimer.stop()
         self.trayIcon.setIcon(QtGui.QIcon("resource/icon.png"))
-        showStatusDialog=ShowStatusDialog(status,self)
+        showStatusDialog=ShowStatusDialog(status)
         if showStatusDialog.exec_():
             reStatus=showStatusDialog.getRetValue()
             if reStatus:
                 resp=self.xkongfan.Update(reStatus,in_reply_to_status_id=status['id'])
-                if resp['id']:
-                    logging.info("ReplySent:to [%s],id [%s]"%(status['id'],resp['id']))
     def blitSysIcon(self):
         self.sysIconBlitFlag+=1
         if self.sysIconBlitFlag%2==0:
             self.trayIcon.setIcon(QtGui.QIcon(self.sysIconBlitImg))
         else:
             self.trayIcon.setIcon(QtGui.QIcon("%s/None.png"%self.userHeadPath))
-    def initMentionID(self):
-        resp=self.xkongfan.Mentions(count=1)
+    def getLastStatusID(self,tipe="home_timeline"):
+        if tipe=="mentions":
+            resp=self.xkongfan.Mentions(count=1)
+        elif tipe=="home_timeline":
+            resp=self.xkongfan.HomeTimeline(count=1)
         status=resp[0]
         self.lastMentionsId=status['id']
 
-    def btnHandle(self,btnID):
-        if btnID==1001:
-            self.hide()
-        elif btnID==1002:
-            self.trayIcon.hide()
-            self.close()
-            sys.exit(0)
-        elif btnID==1003:
-            self.insertTopic()
-        elif btnID==1004:
-            self.getImg()
-        elif btnID==1005:
-            self.atFriend()
-        elif btnID==1006:
-            self.update()
+    def initBinding(self):
+        self.getButton('btnMinimize').OnClick.connect(self.hide)
+        self.getButton('btnClose').OnClick.connect(self.close)
+        self.getButton('btnInsertTopic').OnClick.connect(self.insertTopic)
+        self.getButton('btnAtFriend').OnClick.connect(self.atFriend)
+        self.getButton('btnInsertImg').OnClick.connect(self.getImg)
+        self.getButton('btnUpdate').OnClick.connect(self.update)
+        self.btnShowSelectedImage=self.getButton('btnShowSelectedImage')
+        self.btnShowSelectedImage.OnClick.connect(self.imgLabelLeftClicked)
+        self.btnShowSelectedImage.OnRightClick.connect(self.imgLabelRightClicked)
+        self.plainTextEdit.returnPressed.connect(self.update)
+        self.trayIcon.activated.connect(self.trayClick)
+
 
     def initConfig(self):
         logging.info("Init Config.")
@@ -162,23 +169,18 @@ class XkongFan(XkongfanWindow):
                 self.cf.add_section(section)
         self.cf.write(open(self.CONFIGFILE,"w"))
         self.cf.set("Manage","auto_minimize","true")
-        self.cf.set("Manage","Care_for","mentions")
+        self.cf.set("Manage","Care_for","home_timeline")
         self.cf.set("Manage","Last_Mention_id","000000")
         self.cf.write(open(self.CONFIGFILE,"w"))
         logging.info("ConfigFile ready.")
 
-    def KeyReturnEvent(self):
-        #PlainTextEdit的keyReturn事件
-        self.update()
     def imgLabelLeftClicked(self):
-        #ImgLabel的左键单击事件
         if self.img:
             self.showImg(self.img)
     def imgLabelRightClicked(self):
-        #ImgLabel的右键单击事件
         if self.img:
             self.img=""
-            self.imgLabel.setText(u"")
+            self.btnShowSelectedImage.setText(u"")
             if os.path.isfile(self.convertedImg):
                 os.remove(self.convertedImg)
     def alert(self,msg,title=u"提示"):
@@ -217,11 +219,9 @@ class XkongFan(XkongfanWindow):
         else:
             resp=self.xkongfan.Update(msg)
         if resp['rawid']:
-            #silent mode ---------->
-            #self.alert(u"更新成功：【%s】"%resp['rawid'])
             self.img=""
             self.plainTextEdit.setPlainText("")
-            self.imgLabel.setText(u"")
+            self.btnShowSelectedImage.setText(u"")
             if os.path.isfile(self.convertedImg):
                 os.remove(self.convertedImg)
             self.convertedImg=""
@@ -231,7 +231,6 @@ class XkongFan(XkongfanWindow):
                 self.hide()
             logging.info("Staus Updated.")
         else:
-            #Logging.....log Error
             logging.error("Error when update status:MSG:%s"%msg)
             self.alert(u"消息更新失败……")
 
@@ -241,7 +240,7 @@ class XkongFan(XkongfanWindow):
         self.img=fd.getOpenFileName(None,u"选择图片","./",
                     ("Image files(*.jpg;*.bmp;*.jpeg;*.gif;*.png)"))[0]
         if os.path.isfile(self.img):
-            self.imgLabel.setText(self.img.split("/")[-1])
+            self.btnShowSelectedImage.setText(self.img.split("/")[-1])
         return self.img
     def atFriend(self):
         myFriends=self.getFriendList()
@@ -307,7 +306,7 @@ def main():
     socket.connectToServer(serverName)
     if socket.waitForConnected(500):
         msg=u"只允许同时运行一个实例。程序已经打开？"
-        QtGui.QMessageBox.warning(None,u"提示",msg)
+        QtGui.QMessageBox.warning(None,u"爱尚饭 - 提示",msg)
         return (app.quit())
     localServer=QtNetwork.QLocalServer()
     localServer.listen(serverName)
