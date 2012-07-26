@@ -26,7 +26,7 @@ buttonMap={
         'btnImgSource':"%s/btnInsertTopic.png"%ResourceDir},
     1004:{
         'btnId':1004,
-        'btnName':'btnInsertImg',
+        'btnName':'btnInsertImage',
         'btnGeometry':(70,157,18,18),
         'btnToolTip':u"插入图片",
         'onMouseShow':False,
@@ -48,9 +48,15 @@ buttonMap={
     1007:{
         'btnId':1007,
         'btnName':'btnShowSelectedImage',
-        'btnGeometry':(150,157,130,18),
+        'btnGeometry':(180,157,120,18),
         'btnToolTip':u"左单击查看图片，右单击清除图片",
         'onMouseShow':False,
         'btnImgSource':"%s/btnNone.png"%ResourceDir},
-
+    1008:{
+        'btnId':1008,
+        'btnName':'btnGrabScreen',
+        'btnGeometry':(150,157,18,18),
+        'btnToolTip':u"截图发布",
+        'onMouseShow':False,
+        'btnImgSource':"%s/btnGrabScreen.png"%ResourceDir},
     }

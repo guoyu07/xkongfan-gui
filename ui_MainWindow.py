@@ -20,13 +20,8 @@ class XkongfanWindow(QtGui.QMainWindow):
         self.dskHeight=QtGui.QApplication.desktop().height()
         self.initUI()
 
+        self.__setMaskByRegion()
 
-        self.mask=QtGui.QBitmap(360,178)
-        self.mask.fill(QtCore.Qt.white)
-        painter=QtGui.QPainter(self.mask)
-        painter.setBrush(QtGui.QColor(0x000000))
-        painter.drawRoundRect(0,0,360,178,4,4)
-        self.setMask(self.mask)
 
         self.plainTextEdit =xkongWidget.xRoundPlainTextEdit(self)
         self.plainTextEdit.setGeometry(QtCore.QRect(9, 26, 342, 128))
@@ -43,6 +38,24 @@ class XkongfanWindow(QtGui.QMainWindow):
         self.trayIcon.show()
         self.trayMenu()
         self.initButton()
+
+    def __setMask(self):
+        self.mask=QtGui.QBitmap(359,178)
+        self.mask.fill(QtCore.Qt.white)
+        painter=QtGui.QPainter(self.mask)
+        painter.setBrush(QtGui.QColor(0x000000))
+        painter.drawRoundRect(0,0,358,178,5,5)
+        self.setMask(self.mask)
+
+    def __setMaskByRegion(self):
+        path=QtGui.QPainterPath()
+        rect=QtCore.QRectF(0.0,0.0,359.0,178.0)
+        path.addRoundRect(rect,5.0,5.0)
+        polygon=QtGui.QPolygon()
+        polygon=path.toFillPolygon().toPolygon()
+        region=QtGui.QRegion(polygon)
+        self.setMask(region)
+
     def initButton(self):
         self.imgButtonList=[]
         for buttonID,buttonDesc in buttonMap.iteritems():
@@ -102,6 +115,7 @@ class XkongfanWindow(QtGui.QMainWindow):
     def initUI(self):
         self.animation=QtCore.QPropertyAnimation(self,"geometry")
         self.animation.setDuration(200)
+
         self.animation.setStartValue(QtCore.QRect(self.dskWidth/2,
                                                 self.dskHeight/2,
                                                 0,
@@ -111,8 +125,9 @@ class XkongfanWindow(QtGui.QMainWindow):
                                                 360,
                                                 178))
         self.animation.start()
-    def showNormal(self):
-        self.initUI()
+
+
+
 if __name__=="__main__":
     import sys
     app=QtGui.QApplication(sys.argv)

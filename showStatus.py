@@ -18,8 +18,9 @@ class ShowStatusDialog(QtGui.QDialog):
         self.retValue=""
         self.initUI()
     def initUI(self):
-        self.userHeadImg="./data/user_head/%s.png"%(self.user['id'])
-        self.ui.label.setPixmap(QtGui.QPixmap(self.userHeadImg))
+        self.userHeadImg=QtGui.QPixmap("./data/user_head/%s.png"%(self.user['id']))
+        self.ui.label.resize(self.userHeadImg.width(),self.userHeadImg.height())
+        self.ui.label.setPixmap(self.userHeadImg)
         self.ui.textEdit.setText("%s:%s"%(self.user['screen_name'],self.status['text']))
         self.ui.plainTextEdit.setPlainText("@%s "%self.user['screen_name'])
         self.setWindowTitle(u"回复%s"%self.user['screen_name'])
