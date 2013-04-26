@@ -24,11 +24,17 @@ class xComboBox(QtGui.QComboBox):
 class xPlainTextEdit(QtGui.QPlainTextEdit):
     '''QPlainTextEdit with signal("returnPressed()") added'''
     returnPressed=QtCore.Signal()
+    enterPressed = QtCore.Signal()
+
     def __init__(self,parent=None):
         super(xPlainTextEdit,self).__init__(parent)
+
     def keyPressEvent(self,event):
         if event.key()==QtCore.Qt.Key_Return:
             self.returnPressed.emit()
+            return
+        elif event.key() == QtCore.Qt.Key_Enter:
+            self.enterPressed.emit()
             return
         QtGui.QPlainTextEdit.keyPressEvent(self,event)
 
@@ -42,6 +48,8 @@ class xImageButton(QtGui.QLabel):
         super(xImageButton,self).__init__(parent)
         self.setMouseTracking(True)
         self.parent=parent
+        # 用于重构statusBar，设置statusBar
+        self.tooltip = ''
     def mousePressEvent(self,event):
         if event.buttons()==QtCore.Qt.LeftButton:
             self.OnClick.emit()
@@ -49,8 +57,27 @@ class xImageButton(QtGui.QLabel):
         elif event.buttons()==QtCore.Qt.RightButton:
             self.OnRightClick.emit()
     def enterEvent(self,event):
+        # 用于重构statusBar，设置statusBar
+        if hasattr(self.parent,'setStatus'):
+            self.parent.setStatus(self.tooltip)
+        if not self.pixmap():
+            self.OnMouseIn.emit()
+            return
+        if not self.pixmap().isNull():
+            self.setPixmap(QtGui.QPixmap('resource/%s_clicked.png'%self.objectName()))
+
         self.OnMouseIn.emit()
     def leaveEvent(self,event):
+        # 用于重构statusBar，设置statusBar
+        if hasattr(self.parent,'setStatus'):
+            self.parent.setStatus('')
+        if not self.pixmap():
+            self.OnMouseOut.emit()
+            return
+        if not self.pixmap().isNull():
+            self.setPixmap(QtGui.QPixmap('resource/%s_ms_out.png'%self.objectName()))
+
+
         self.OnMouseOut.emit()
 
 class xRoundPlainTextEdit(xPlainTextEdit):
@@ -62,8 +89,8 @@ class xRoundPlainTextEdit(xPlainTextEdit):
 
     def __setMaskByRegion(self):
         path=QtGui.QPainterPath()
-        rect=QtCore.QRectF(0.0,0.0,338.0,124.0)
-        path.addRoundRect(rect,6.0,6.0)
+        rect=QtCore.QRectF(0.0,0.0,420.0,135.0)
+        path.addRoundRect(rect,5.0,5.0)
         polygon=QtGui.QPolygon()
         polygon=path.toFillPolygon().toPolygon()
         region=QtGui.QRegion(polygon)
@@ -131,6 +158,47 @@ class xScreenShot(QtGui.QWidget):
         self.fullScreenLabel.setCursor(
                 QtGui.QCursor(QtGui.QPixmap("resource/curGrab.png"),
                               hotX=2,hotY=2))
+class xHotkeyHooker(QtGui.QWidget):
+    '''Global hotkey hooker widget.'''
+    hotkeyPressed=QtCore.Signal()
+    def __init__(self,hotKey,parent=None):
+        super(xHotkeyHooker,self).__init__(parent)
+        #self.hotKey="Lmenu+g"
+        self.hotKey={
+            "MenuKey":hotKey.split("+")[0].title(),
+            "Key":hotKey.split("+")[-1].title()}
+        self.installHotkeyHooker()
+        self.menuKeyPressed=False
+
+    def installHotkeyHooker(self):
+        import pyHook
+        self.hookManager=pyHook.HookManager()
+        self.hookManager.KeyDown=self.onKeyDownEvent
+        self.hookManager.KeyUp=self.onKeyUpEvent
+        #self.hookManager.MouseAllButtonsDown=self.onMousePressEvent
+        #self.hookManager.HookMouse()
+        self.hookManager.HookKeyboard()
+    # For keyEvent and mouseEvent ,return True to pass the event to
+    # other handlers, return False to stop the event from propagating
+    def onKeyDownEvent(self,event):
+        keyName=event.Key
+        if keyName==self.hotKey["MenuKey"]:
+            self.menuKeyPressed=True
+            return True
+        if keyName==self.hotKey["Key"] and self.menuKeyPressed:
+            self.hotkeyPressed.emit()
+            return False
+        return True
+    def onMousePressEvent(self,event):
+        return True
+    def onKeyUpEvent(self,event):
+        keyName=event.Key
+        if keyName==self.hotKey["MenuKey"]:
+            self.menuKeyPressed=False
+        return True
+
+
+
 
 
 

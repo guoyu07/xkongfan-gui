@@ -48,12 +48,11 @@ class InsertTopicDialog(QtGui.QDialog):
         self.aniZoomRaw=QtCore.QPropertyAnimation(self,"geometry")
         self.aniZoomRaw.setDuration(200)
         self.aniZoomRaw.setStartValue(QtCore.QRect(self.parent.x()+5,
-                                                    self.parent.y()+178+24,
+                                                    self.parent.y()+self.parent.height()+24,
                                                      0, 0))
         self.aniZoomRaw.setEndValue(QtCore.QRect(self.parent.x()+5,
-                                                    self.parent.y()+178+24,
+                                                    self.parent.y()+self.parent.height()+24,
                                                      351, 154))
         self.aniZoomRaw.start()
         self.zoomFlag=True
-
 

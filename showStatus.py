@@ -24,6 +24,7 @@ class ShowStatusDialog(QtGui.QDialog):
         self.ui.textEdit.setText("%s:%s"%(self.user['screen_name'],self.status['text']))
         self.ui.plainTextEdit.setPlainText("@%s "%self.user['screen_name'])
         self.setWindowTitle(u"回复%s"%self.user['screen_name'])
+        self.ui.pushButton.connect(self.parent.onBtnInsertImage)
         self.ui.plainTextEdit.returnPressed.connect(self.accept)
         self.zoomIn()
     def accept(self):
