@@ -10,7 +10,7 @@
 # 2012-7-3 19:59:40
 #
 import sys
-from xAuth2 import BaseAuth
+from xAuth import BaseAuth
 import fanfou
 import json
 import ConfigParser
@@ -76,6 +76,11 @@ class XkongFan(XkongfanWindow):
         self.uid=self.getUid()
         self.xkongfan=fanfou.Fanfou(self.uid,parent=self)
 
+        if not os.path.isdir(self.userAvatarPath):
+            os.makedirs(self.userAvatarPath)
+        if not os.path.isdir(self.userScreenShot):
+            os.makedirs(self.userScreenShot)
+
         self.getFriendAvatar()
         self.cf.readfp(codecs.open(self.CONFIGFILE,"r","utf-8"))
         whichToCareFor=self.cf.get("Manage","care_for")
@@ -90,8 +95,7 @@ class XkongFan(XkongfanWindow):
         self.startListenConsumer()
 
     def getFriendAvatar(self):
-        if not os.path.isdir(self.userAvatarPath):
-            os.makedirs(self.userAvatarPath)
+
         resp=self.xkongfan.StatusFriends()
         for friend in resp:
             friendAvatarUrl=friend['profile_image_url_large']
@@ -251,7 +255,7 @@ class XkongFan(XkongfanWindow):
     def showImg(self,imgsource,flag=True):
 
         imgName=imgsource.split("/")[-1]
-        self.convertedImg="%s.png"%imgName
+        self.convertedImg="./data/%s_tmp.png"%imgName
         if not os.path.isfile(self.convertedImg):
             img=Image.open(imgsource)
             img.save(self.convertedImg,"png")
@@ -259,6 +263,7 @@ class XkongFan(XkongfanWindow):
             showImgDlg=ShowImgDialog(self.convertedImg,self)
             if showImgDlg.exec_():
                 os.remove(self.convertedImg)
+        os.remove(self.convertedImg)
 
     #slot+++++++++++++++++++++++++++++++++++++++++
     def onBtnUpdate(self):
