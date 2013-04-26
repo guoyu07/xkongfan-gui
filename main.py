@@ -10,7 +10,7 @@
 # 2012-7-3 19:59:40
 #
 import sys
-from xAuth import BaseAuth
+from xAuth2 import BaseAuth
 import fanfou
 import json
 import ConfigParser
@@ -19,8 +19,13 @@ import os
 import codecs
 import urllib
 import Image
-#used in packing to exe files via py2exe
+import webbrowser
+
+# used in packing to exe files via py2exe
 import sip
+
+# PyQrCode
+import pyqrcode
 
 from PySide import QtGui,QtCore,QtNetwork
 
@@ -40,6 +45,8 @@ class xkongAuth(BaseAuth):
         super(xkongAuth,self).__init__(parent)
     def getAccount(self):
         return self.parent.getAccount()
+
+
 class XkongFan(XkongfanWindow):
     '''Main Class of Xkongfan.'''
     def __init__(self,parent=None):
@@ -63,6 +70,7 @@ class XkongFan(XkongfanWindow):
         sigTimer.singleShot(1000,self.getInit)
 
     def getInit(self):
+        u'''初始化'''
         self.xauth=xkongAuth(self)
         self.xauth.getToken()
         self.uid=self.getUid()
@@ -97,7 +105,7 @@ class XkongFan(XkongfanWindow):
 
     def startListen(self):
         self.timer=QtCore.QTimer(self)
-        self.timer.setInterval(30*1000)
+        self.timer.setInterval(30*1000) # 每隔30秒监听
         self.timer.timeout.connect(self.getLastMentionId)
         self.timer.start()
 
@@ -183,18 +191,21 @@ class XkongFan(XkongfanWindow):
             if reStatus:
                 resp=self.xkongfan.Update(reStatus,in_reply_to_status_id=status['id'])
     def initBinding(self):
+        self.openFFAction.triggered.connect(self.openFF)
         self.getButton('btnMinimize').OnClick.connect(self.hide)
         self.getButton('btnClose').OnClick.connect(self.close)
         self.getButton('btnInsertTopic').OnClick.connect(self.onBtnInsertTopic)
         self.getButton('btnAtFriend').OnClick.connect(self.onBtnAtFriend)
-        self.getButton('btnInsertImage').OnClick.connect(self.onBtnInsertImage)
+        self.getButton('btnInsertImg').OnClick.connect(self.onBtnInsertImage)
         self.getButton('btnUpdate').OnClick.connect(self.onBtnUpdate)
         self.btnShowSelectedImage=self.getButton('btnShowSelectedImage')
         self.btnShowSelectedImage.OnClick.connect(self.onBtnSelectImage)
         self.btnShowSelectedImage.OnRightClick.connect(self.onBtnSelectImageRight)
         self.plainTextEdit.returnPressed.connect(self.onBtnUpdate)
+        self.plainTextEdit.enterPressed.connect(self.makeQr)
         self.trayIcon.activated.connect(self.onSystrayClick)
         self.getButton('btnGrabScreen').OnClick.connect(self.onBtnGrabScreen)
+        self.hotKeyManager.hotkeyPressed.connect(self.globalHotkeyEvent)
 
     def initConfig(self):
         logging.info("Init Config.")
@@ -226,7 +237,7 @@ class XkongFan(XkongfanWindow):
                 os.remove(self.convertedImg)
 
     def alert(self,msg,title=u"提示"):
-        QtGui.QMessageBox.warning(self,title,msg)
+        return self.setStatus(msg)
 
     def getUid(self):
         logging.info("Get user id.")
@@ -234,7 +245,7 @@ class XkongFan(XkongfanWindow):
         resp=self.xauth.apiOpen(verify_url)
         jsonData=json.read(resp)
         uid=jsonData['id']
-        logging.info("Userid Got.")
+        logging.info("User id Got.")
         return uid
 
     def showImg(self,imgsource,flag=True):
@@ -286,13 +297,13 @@ class XkongFan(XkongfanWindow):
         if imageFile:
             self.img=imageFile
         if os.path.isfile(self.img):
-            self.btnShowSelectedImage.setText(self.img.split("/")[-1])
+            self.btnShowSelectedImage.setText('<font color="#CECECE">%s</font>'%self.img.split("/")[-1])
         return self.img
 
     def onBtnAtFriend(self):
         myFriends=self.getFriendList()
         atFriendDialog=AtFriendDialog(myFriends,self)
-        atFriendDialog.move(self.x(),self.y()+178)
+        atFriendDialog.move(self.x(),self.y()+self.height())
         if atFriendDialog.exec_():
             friend=atFriendDialog.getRetValue()
             self.plainTextEdit.insertPlainText("@%s "%friend)
@@ -302,7 +313,7 @@ class XkongFan(XkongfanWindow):
         hotTopics=self.getHotTopic()
         savedTopics=self.getSavedTopic()
         insertDialog=InsertTopicDialog(savedTopics,hotTopics,self)
-        insertDialog.move(self.x(),self.y()+178)
+        insertDialog.move(self.x(),self.y()+self.height())
         if insertDialog.exec_():
             topic=insertDialog.getRetValue()
             self.plainTextEdit.insertPlainText("#%s#"%topic)
@@ -317,6 +328,13 @@ class XkongFan(XkongfanWindow):
         self.screenshotWidget.hide()
         self.screenshotWidget.shotCompleted.connect(self.saveScreenShot)
         self.screenshotWidget.grab()
+    def globalHotkeyEvent(self):
+        if self.hiddenFlag:
+            self.initUI()
+            self.trayIcon.show()
+        else:
+            self.hide()
+            self.trayIcon.hide()
 
     def getHotTopic(self):
         hotTopic=[]
@@ -375,6 +393,26 @@ class XkongFan(XkongfanWindow):
             self.btnShowSelectedImage.setText(self.img.split("/")[-1])
             self.alert(u"截图保存成功！")
             self.showImg(self.img)
+
+    def makeQr(self):
+        '''Make QR image,then show.'''
+        logging.info('Making Qr...')
+        txt = self.plainTextEdit.toPlainText()
+        tmp = txt.decode('utf-8-sig').encode('utf-8')
+        tmp = codecs.BOM_UTF8 + tmp
+        qr_img = pyqrcode.MakeQRImage(tmp)
+        now=time.strftime("%Y-%m-%d_%H_%M_%S",time.localtime())
+        saveFileName = "%s/QR_%s.png"%(self.userScreenShot,now)
+        qr_img.save(saveFileName)
+        self.showImg(saveFileName)
+        self.plainTextEdit.clear()
+
+
+
+    def openFF(self):
+        '''Open index of Fanfou'''
+        url = 'http://fanfou.com'
+        webbrowser.open(url)
 
 def main():
     app=QtGui.QApplication(sys.argv)
